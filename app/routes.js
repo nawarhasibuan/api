@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const routes_1 = __importDefault(require("../features/user/routes"));
+const error_1 = require("../middlewares/error");
+const routes_2 = __importDefault(require("../features/comment/routes"));
+const routes_3 = __importDefault(require("../features/post/routes"));
+const routes_4 = __importDefault(require("../features/collection/routes"));
+const routes_5 = __importDefault(require("../features/waris/routes"));
+const Routes = (0, express_1.Router)();
+Routes.use("/user", routes_1.default);
+Routes.use("/comment", routes_2.default);
+Routes.use("/post", routes_3.default);
+Routes.use("/collection", routes_4.default);
+Routes.use("/waris", routes_5.default);
+Routes.use(error_1.handleError);
+exports.default = Routes;

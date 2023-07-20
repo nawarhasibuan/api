@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const controller_1 = require("./controller");
+const auth_1 = require("../../middlewares/auth");
+const authorizeSuper_1 = require("../../middlewares/authorizeSuper");
+const validation_1 = require("./validation");
+const collectionRoutes = (0, express_1.Router)();
+collectionRoutes.get("/", validation_1.validateOpt, controller_1.getCollections);
+collectionRoutes.post("/", auth_1.auth, authorizeSuper_1.authorizeSuper, validation_1.validateColl, controller_1.createCollection);
+collectionRoutes.get("/:id", validation_1.validateId, controller_1.getCollectionById);
+collectionRoutes.patch("/:id", auth_1.auth, authorizeSuper_1.authorizeSuper, validation_1.validateId, validation_1.validateAdd, controller_1.editCollection);
+collectionRoutes.delete("/:id", auth_1.auth, authorizeSuper_1.authorizeSuper, validation_1.validateId, controller_1.deleteCollection);
+exports.default = collectionRoutes;
