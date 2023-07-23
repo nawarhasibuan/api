@@ -28,7 +28,8 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const zod_1 = require("zod");
 const gray_matter_1 = __importDefault(require("gray-matter"));
 const user_1 = __importDefault(require("../user/user"));
-exports.FrontMatter = zod_1.z.object({
+exports.FrontMatter = zod_1.z
+    .object({
     path: zod_1.z
         .string({
         required_error: "path harus ada",
@@ -40,9 +41,11 @@ exports.FrontMatter = zod_1.z.object({
             /^\bsoal\b\/(\baljabar\b|\baritmatika\b|\bkombinatorika\b|\bpemrograman\b|\geometri\b)\/[\w+-]+$/.test(v) ||
             /^\bsoal\b\/\bosn\b\/(\binformatika\b|\bmatematika\b)\/\d{4}\/os[kpn]-[a-z]?\d{0,1}?-?\d{1,2}$/.test(v));
     }),
-    summary: zod_1.z.string({
+    summary: zod_1.z
+        .string({
         invalid_type_error: "summary harus string",
-    }),
+    })
+        .optional(),
     type: zod_1.z.enum(["article", "exercise"], {
         invalid_type_error: "hanya article atau exercise",
         required_error: "tipe post harus disediakan",
@@ -51,7 +54,14 @@ exports.FrontMatter = zod_1.z.object({
         required_error: "sertakan title",
     }),
     tags: zod_1.z.array(zod_1.z.string()).optional(),
-});
+    score: zod_1.z.number().optional(),
+})
+    .refine((fm) => (fm.type === "article" &&
+    fm.summary != undefined &&
+    fm.score === undefined) ||
+    (fm.type === "exercise" &&
+        fm.summary === undefined &&
+        fm.score !== undefined), "summary atau score harus ada sesuai type");
 const SOpt = zod_1.z
     .object({
     categories: zod_1.z.string(),
