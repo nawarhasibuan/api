@@ -53,12 +53,14 @@ const ResponseData_1 = __importDefault(require("../../utils/ResponseData"));
 const CustomError_1 = __importDefault(require("../../utils/CustomError"));
 const comment_1 = __importDefault(require("../comment/comment"));
 const github_1 = require("../../utils/github");
+const gray_matter_1 = __importDefault(require("gray-matter"));
 const getArticles = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const results = yield post_1.default.find(res.locals.query, null, res.locals.options);
-        res
-            .status(200)
-            .json(new ResponseData_1.default("Daftar artikel", results)
+        const results = yield post_1.default.find(res.locals.query, null, res.locals.options).lean();
+        res.status(200).json(new ResponseData_1.default("Daftar artikel", results.map((result) => {
+            const { path } = result, rest = __rest(result, ["path"]);
+            return rest;
+        }))
             .addLink(Math.floor(res.locals.page), "/post", res.locals.url)
             .toJSON());
     }
@@ -161,11 +163,8 @@ const getPostById = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         }
         const { __v } = article, data = __rest(article, ["__v"]);
         const content = yield (0, github_1.getContent)(article.path);
-        res.status(200).json(new ResponseData_1.default("sukses", {
-            content: content.data,
-            comments: article.comments,
-            meta: article.meta,
-        }).toJSON());
+        const fm = (0, gray_matter_1.default)(content.data);
+        res.status(200).json(new ResponseData_1.default("sukses", Object.assign(Object.assign({}, fm.data), { content: fm.content, comments: article.comments, meta: article.meta })).toJSON());
     }
     catch (error) {
         next(error);
