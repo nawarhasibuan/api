@@ -45,9 +45,10 @@ exports.FrontMatter = zod_1.z
     tags: zod_1.z.array(zod_1.z.string()).optional(),
     score: zod_1.z.number().optional(),
 })
-    .refine((fm) => fm.type === "article" &&
+    .refine((fm) => (fm.type === "article" &&
     fm.summary != undefined &&
-    fm.score === undefined, "summary atau score harus ada sesuai type");
+    fm.score === undefined) ||
+    fm.type === "exercise", "summary atau score harus ada sesuai type");
 const SOpt = zod_1.z
     .object({
     categories: zod_1.z.string(),
