@@ -54,7 +54,6 @@ const editProfile = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     try {
         const { email, firstName, lastName, avatar, dob, phone, address } = res.locals
             .data;
-        console.log(address);
         const user = yield user_1.default.findById((_b = req.user) === null || _b === void 0 ? void 0 : _b.id);
         if (!user) {
             res.status(404).json({ message: "User not found" });

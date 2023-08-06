@@ -66,7 +66,9 @@ const validateEdit = (req, res, next) => {
     const editData = exports.SUser.omit({
         username: true,
         password: true,
-    }).safeParse(editInput);
+    })
+        .partial()
+        .safeParse(editInput);
     if (editData.success) {
         res.locals.data = editData.data;
         next();
