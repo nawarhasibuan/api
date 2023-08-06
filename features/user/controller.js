@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.loginUser = exports.registerUser = exports.editProfile = exports.getProfile = void 0;
+exports.resetPassword = exports.forgotPassword = exports.refreshToken = exports.loginUser = exports.registerUser = exports.editProfile = exports.getUser = exports.getProfile = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("./user"));
@@ -26,21 +26,29 @@ const getProfile = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         if (!user) {
             throw new Error("User not found");
         }
-        const data = {
-            firstName: user === null || user === void 0 ? void 0 : user.firstName,
-            lastName: user.lastName,
-            avatar: user.avatar,
-            dob: user.dob,
-            phone: user.phone,
-            address: user.address,
-        };
-        res.status(200).json({ data, message: "User profile" });
+        res.status(200).json(new ResponseData_1.default("user profile", user.me()));
     }
     catch (error) {
         next(error);
     }
 });
 exports.getProfile = getProfile;
+function getUser(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const id = req.params.id;
+        try {
+            const user = yield user_1.default.findById(id);
+            if (!user) {
+                throw new CustomError_1.default("not found", 404);
+            }
+            res.status(200).json(new ResponseData_1.default("user data", user.data()));
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+}
+exports.getUser = getUser;
 const editProfile = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _b;
     try {
@@ -97,7 +105,7 @@ const registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         const data = new ResponseData_1.default("User berhasil ditambahkan", {
             token,
             refreshToken,
-            user: newUser.data(),
+            user: newUser.me(),
         });
         res.status(201).json(data.toJSON());
     }
@@ -135,7 +143,7 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         const data = new ResponseData_1.default("User berhasil login", {
             token,
             refreshToken,
-            user: user.data(),
+            user: user.me(),
         });
         res.status(201).json(data.toJSON());
     }
@@ -144,6 +152,36 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.loginUser = loginUser;
+function refreshToken(req, res, next) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+            if (!token) {
+                throw new CustomError_1.default("Akses ditolak.", 401).push({
+                    field: "token",
+                    message: "Tidak ada token",
+                });
+            }
+            const { id } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET_REFRESH);
+            const newToken = jsonwebtoken_1.default.sign({ id }, process.env.JWT_SECRET, {
+                expiresIn: "2h",
+            });
+            const refreshToken = jsonwebtoken_1.default.sign({ id }, process.env.JWT_SECRET_REFRESH, {
+                expiresIn: "24h",
+            });
+            const data = new ResponseData_1.default("user new token", {
+                token: newToken,
+                refreshToken,
+            });
+            res.status(201).json(data.toJSON());
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+}
+exports.refreshToken = refreshToken;
 const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email } = req.body;

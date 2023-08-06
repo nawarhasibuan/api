@@ -29,11 +29,12 @@ const blogPostSchema = new mongoose_1.Schema({
     path: { type: String, required: true },
     author: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
     summary: { type: String },
+    score: Number,
     tags: [{ type: String, lowercase: true }],
     type: { type: String, required: true, enum: ["exercise", "article"] },
-    meta: {
-        views: { type: Number, default: 0 },
-        likes: { type: Number, default: 0 },
+    metaData: {
+        views: [{ type: String }],
+        likes: [{ type: mongoose_1.Schema.Types.ObjectId }],
         _id: false,
     },
     comments: {
@@ -41,10 +42,13 @@ const blogPostSchema = new mongoose_1.Schema({
         default: [],
     },
 }, { timestamps: { createdAt: true, updatedAt: false } });
+blogPostSchema.virtual("meta").get(function () {
+    return { views: this.metaData.views.length, likes: this.metaData.likes.length };
+});
 blogPostSchema.methods.data = function () {
     return {
+        id: this.id,
         title: this.title,
-        path: this.path,
         author: this.author,
         summary: this.summary,
         tags: this.tags,
@@ -55,6 +59,6 @@ blogPostSchema.methods.data = function () {
     };
 };
 blogPostSchema.index({ author: 1, type: 1 });
-blogPostSchema.index({ path: 1 }, { unique: true });
+blogPostSchema.index({ path: 1, title: 1 }, { unique: true });
 const Post = mongoose_1.default.model("Post", blogPostSchema);
 exports.default = Post;

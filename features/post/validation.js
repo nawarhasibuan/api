@@ -8,17 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -27,19 +16,19 @@ exports.validatePost = exports.validateOpt = exports.SOptions = exports.FrontMat
 const mongoose_1 = __importDefault(require("mongoose"));
 const zod_1 = require("zod");
 const gray_matter_1 = __importDefault(require("gray-matter"));
-const user_1 = __importDefault(require("../user/user"));
 exports.FrontMatter = zod_1.z
     .object({
+    id: zod_1.z.string().optional(),
     path: zod_1.z
         .string({
         required_error: "path harus ada",
         invalid_type_error: "path harus string",
     })
         .refine((v) => {
-        return (/(^opini|^travel|^waris)\/[\w-]+$/.test(v) ||
-            /^\bpembelajaran\b\/(\binformatika\b|\bmatematika\b)\/[\w+-]+\/[\w+-]+$/.test(v) ||
-            /^\bsoal\b\/(\baljabar\b|\baritmatika\b|\bkombinatorika\b|\bpemrograman\b|\geometri\b)\/[\w+-]+$/.test(v) ||
-            /^\bsoal\b\/\bosn\b\/(\binformatika\b|\bmatematika\b)\/\d{4}\/os[kpn]-[a-z]?\d{0,1}?-?\d{1,2}$/.test(v));
+        return (/(^opini|^travel|^waris)$/.test(v) ||
+            /^\bpembelajaran\b\/(\binformatika\b|\bmatematika\b)\/[\w+-]+$/.test(v) ||
+            /^\bsoal\b\/(\baljabar\b|\baritmatika\b|\bkombinatorika\b|\bpemrograman\b|\geometri\b)$/.test(v) ||
+            /^\bsoal\b\/\bosn\b\/(\binformatika\b|\bmatematika\b)\/\d{4}$/.test(v));
     }),
     summary: zod_1.z
         .string({
@@ -56,12 +45,9 @@ exports.FrontMatter = zod_1.z
     tags: zod_1.z.array(zod_1.z.string()).optional(),
     score: zod_1.z.number().optional(),
 })
-    .refine((fm) => (fm.type === "article" &&
+    .refine((fm) => fm.type === "article" &&
     fm.summary != undefined &&
-    fm.score === undefined) ||
-    (fm.type === "exercise" &&
-        fm.summary === undefined &&
-        fm.score !== undefined), "summary atau score harus ada sesuai type");
+    fm.score === undefined, "summary atau score harus ada sesuai type");
 const SOpt = zod_1.z
     .object({
     categories: zod_1.z.string(),
@@ -128,7 +114,6 @@ const validateOpt = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.validateOpt = validateOpt;
 const validatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c, _d;
     const { content } = req.body;
     const blogData = zod_1.z
         .string({
@@ -142,15 +127,7 @@ const validatePost = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             const frontMatter = exports.FrontMatter.safeParse(markdown.data);
             if (frontMatter.success) {
                 res.locals.data = frontMatter.data;
-                const author = yield user_1.default.findById((_c = req.user) === null || _c === void 0 ? void 0 : _c.id)
-                    .select("firstName lastName")
-                    .lean();
-                const _e = frontMatter.data, { path, summary } = _e, withoutPath = __rest(_e, ["path", "summary"]);
-                const front = Object.assign(Object.assign({}, withoutPath), { author: {
-                        id: (_d = req.user) === null || _d === void 0 ? void 0 : _d.id,
-                        name: `${author === null || author === void 0 ? void 0 : author.firstName} ${(author === null || author === void 0 ? void 0 : author.lastName) || ""}`,
-                    }, date: new Date().toDateString() });
-                res.locals.content = gray_matter_1.default.stringify(markdown.content, front);
+                res.locals.content = markdown.content;
                 next();
             }
             else {

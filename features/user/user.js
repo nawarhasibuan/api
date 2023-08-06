@@ -83,10 +83,20 @@ const userSchema = new mongoose_1.Schema({
         enum: ["super", "admin"],
     },
 });
+userSchema.virtual("name").get(function () {
+    return `${this.firstName}${this.lastName && ` ${this.lastName}`}`;
+});
 userSchema.methods.data = function () {
     return {
-        firstName: this === null || this === void 0 ? void 0 : this.firstName,
-        lastName: this.lastName,
+        name: this.name,
+        id: this.id,
+        avatar: this.avatar,
+    };
+};
+userSchema.methods.me = function () {
+    return {
+        name: this.name,
+        email: this.email,
         avatar: this.avatar,
         dob: this.dob,
         phone: this.phone,

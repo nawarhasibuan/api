@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleError = void 0;
 const CustomError_1 = __importDefault(require("../utils/CustomError"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const octokit_1 = require("octokit");
 function handleError(err, req, res, next) {
     let customError;
     if (!(err instanceof CustomError_1.default)) {
@@ -20,6 +21,9 @@ function handleError(err, req, res, next) {
         errors.forEach((val) => {
             customError === null || customError === void 0 ? void 0 : customError.push(val);
         });
+    }
+    if (err instanceof octokit_1.RequestError) {
+        customError = new CustomError_1.default(err.message, err.status);
     }
     if (!customError) {
         customError = err;
