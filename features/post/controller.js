@@ -54,13 +54,16 @@ const CustomError_1 = __importDefault(require("../../utils/CustomError"));
 const comment_1 = __importDefault(require("../comment/comment"));
 const github_1 = require("../../utils/github");
 const path_1 = require("../../utils/path");
+const user_1 = __importDefault(require("../user/user"));
 const getPosts = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const results = yield post_1.default.find(res.locals.query, null, res.locals.options)
             .select({ comments: 0 })
-            .populate("author", "id firstName lastName");
+            .populate("author", "id firstName lastName avatar");
         res.status(200).json(new ResponseData_1.default("Daftar artikel", results.map((result) => {
-            return result.data();
+            const author = new user_1.default(result.author);
+            const _a = result.data(), { comments } = _a, data = __rest(_a, ["comments"]);
+            return Object.assign(Object.assign({}, data), { author: author.data() });
         }))
             .addLink(Math.floor(res.locals.page), "/post", res.locals.url)
             .toJSON());
@@ -127,9 +130,11 @@ const putDb = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
             post = new post_1.default(Object.assign({ author: user === null || user === void 0 ? void 0 : user.id }, data));
         }
         else {
-            post.type = data.type;
-            post.title = data.title;
-            post.summary = data.summary;
+            post.type = data.type || post.type;
+            post.path = data.path || post.path;
+            post.title = data.title || post.title;
+            post.score = data.score || post.score;
+            post.summary = data.summary || post.summary;
             post.tags = data.tags || post.tags;
         }
         yield post.save();
@@ -147,7 +152,7 @@ const getPostById = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         const articleId = req.params.id;
         if (!mongoose_1.default.isValidObjectId(articleId))
             throw new CustomError_1.default("id tidak valid", 400);
-        const article = yield post_1.default.findById(articleId).populate("author", "id firstName lastName");
+        const article = yield post_1.default.findById(articleId).populate("author", "id firstName lastName avatar");
         if (!article) {
             throw new CustomError_1.default("Not found", 404);
         }
@@ -160,7 +165,9 @@ const getPostById = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             }
         }
         const content = yield (0, github_1.getContent)((0, path_1.githubPath)(article.path, article.title));
-        res.status(200).json(new ResponseData_1.default("sukses", Object.assign(Object.assign({}, article.data()), { content })).toJSON());
+        const author = new user_1.default(article.author).data();
+        res.status(200).json(new ResponseData_1.default("sukses", Object.assign(Object.assign({}, article.data()), { author,
+            content })).toJSON());
     }
     catch (error) {
         next(error);

@@ -61,5 +61,15 @@ const collectionSchema = new mongoose_1.Schema({
         default: [],
     },
 });
+collectionSchema.methods.data = function () {
+    return {
+        id: this.id,
+        name: this.name,
+        author: this.author,
+        tags: this.tags,
+        description: this.description,
+        comments: this.comments,
+    };
+};
 const Collection = mongoose_1.default.model("Collection", collectionSchema);
 exports.default = Collection;
